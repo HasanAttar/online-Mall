@@ -4,7 +4,7 @@ const orderController = require('../controllers/orderController');
 const { isAdmin, isAuthenticated } = require('../middlewares/auth');
 
 // Create a new order (accessible to authenticated users)
-router.post('/', isAuthenticated, orderController.createOrder);
+ router.post('/',  orderController.createOrder);
 
 // Get all orders (admin-only)
 router.get('/', isAdmin, orderController.getAllOrders);

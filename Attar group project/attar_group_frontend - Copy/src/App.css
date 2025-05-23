@@ -1,0 +1,49 @@
+/* body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background-color: #333;
+  color: white;
+}
+header .logo {
+  font-size: 24px;
+}
+header input {
+  flex: 1;
+  margin: 0 10px;
+  padding: 5px;
+}
+.user-actions span {
+  margin: 0 10px;
+  cursor: pointer;
+}
+.hero-banner {
+  text-align: center;
+  padding: 50px 20px;
+  background-color: #f4f4f4;
+}
+.categories, .featured {
+  padding: 20px;
+}
+.category-list, .shop-list {
+  display: flex;
+  gap: 10px;
+}
+.category, .shop {
+  border: 1px solid #ddd;
+  padding: 10px;
+  flex: 1;
+  text-align: center;
+  cursor: pointer;
+}
+footer {
+  text-align: center;
+  padding: 10px;
+  background-color: #333;
+  color: white;
+} */

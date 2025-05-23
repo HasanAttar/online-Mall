@@ -3,11 +3,12 @@ import Home from "./pages/CustomerHome";
 import ProductPage from "./pages/ProductPage";
 import ProductDetailsPage from "./components/ProductDetails";
 import CartPage from "./components/Cart";
-import CheckoutPage from "./components/Checkout";
+import CheckoutPage from "./components/CheckOutPage";
 import Header from "./components/Header";
 // import ThankYouPage from "./components/ThankYouPage"; // Optional: A page to display after order placement
 import { CartProvider } from "../context/cartContext";
-
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 function AppCustomer() {
   return (
     <>
@@ -22,6 +23,8 @@ function AppCustomer() {
           {/* <Route path="/thank-you" element={<ThankYouPage />} /> Optional */}
         </Routes>
       </CartProvider>
+      <ToastContainer position="bottom-right" autoClose={3000} />
+
     </>
   );
 }
