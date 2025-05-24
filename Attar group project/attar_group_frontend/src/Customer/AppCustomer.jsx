@@ -9,6 +9,10 @@ import Header from "./components/Header";
 import { CartProvider } from "../context/cartContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import ThankYouPage from "./components/ThankYouPage";
+
+
+
 function AppCustomer() {
   return (
     <>
@@ -20,6 +24,7 @@ function AppCustomer() {
           <Route path="/product/:id" element={<ProductDetailsPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/thank-you" element={<ThankYouPage />} />
           {/* <Route path="/thank-you" element={<ThankYouPage />} /> Optional */}
         </Routes>
       </CartProvider>

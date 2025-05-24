@@ -18,21 +18,24 @@ const validateStock = async (product_id, quantity) => {
 // Create a new order
 exports.createOrder = async (req, res) => {
     try {
-        const { user_id, payment_method, items, delivery_address } = req.body;
+       const { user_id, payment_method, items, delivery_address } = req.body;
 
-        // Validate request body
-        if (!user_id || !payment_method || !items || !delivery_address) {
-            return res.status(400).json({ message: 'Missing required fields' });
-        }
-        if (!Array.isArray(items) || items.length === 0) {
-            return res.status(400).json({ message: "'items' must be a non-empty array" });
-        }
+// Validate required fields (user_id is NOT required now)
+if (!payment_method || !items || !delivery_address) {
+  return res.status(400).json({ message: 'Missing required fields' });
+}
 
-        // Validate foreign key: user_id
-        const isValidUser = await validateForeignKey('users', user_id);
-        if (!isValidUser) {
-            return res.status(400).json({ message: 'Invalid user ID' });
-        }
+if (!Array.isArray(items) || items.length === 0) {
+  return res.status(400).json({ message: "'items' must be a non-empty array" });
+}
+
+// Optional: Validate user_id only if provided
+if (user_id) {
+  const isValidUser = await validateForeignKey('users', user_id);
+  if (!isValidUser) {
+    return res.status(400).json({ message: 'Invalid user ID' });
+  }
+}
 
         let total_price = 0;
 
@@ -54,10 +57,12 @@ exports.createOrder = async (req, res) => {
 
         // Insert into orders table
         const orderQuery = `
-            INSERT INTO orders (user_id, total_price, status, payment_method, created_at) 
-            VALUES (?, ?, 'Pending', ?, NOW())
-        `;
-        const [orderResult] = await pool.execute(orderQuery, [user_id, total_price, payment_method]);
+  INSERT INTO orders (user_id, total_price, status, payment_method, created_at)
+  VALUES (?, ?, 'Pending', ?, NOW())
+`;
+const [orderResult] = await pool.execute(orderQuery, [user_id || null, total_price, payment_method]);
+
+await pool.execute(orderQuery, [user_id || null, total_price, payment_method]);
         const orderId = orderResult.insertId;
 
         // Insert into delivery table

@@ -7,6 +7,7 @@ import {
   updateProduct,
   deleteProduct,
 } from "../../services/api";
+import axios from "../../services/axios"; // use custom axios instance
 import { useNavigate } from "react-router-dom";
 import "../styles/ProductManagement.css";
 
@@ -28,7 +29,6 @@ const ProductManagement = () => {
   const [updatedProduct, setUpdatedProduct] = useState({});
   const navigate = useNavigate();
 
-  // Fetch products, categories, and shops on mount
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -48,6 +48,26 @@ const ProductManagement = () => {
 
     loadData();
   }, []);
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const response = await axios.post("/api/products/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const imageUrl = response.data.imageUrl;
+      setNewProduct({ ...newProduct, image_url: imageUrl });
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      setError("Failed to upload image.");
+    }
+  };
 
   const handleAddProduct = async () => {
     try {
@@ -70,27 +90,25 @@ const ProductManagement = () => {
 
   const handleEditProduct = async (id) => {
     try {
-        const payload = {
-            ...updatedProduct,
-            price: parseFloat(updatedProduct.price), // Ensure price is a number
-            stock: parseInt(updatedProduct.stock),  // Ensure stock is an integer
-        };
-        console.log("Payload for update:", payload); // Debug: Log payload
+      const payload = {
+        ...updatedProduct,
+        price: parseFloat(updatedProduct.price),
+        stock: parseInt(updatedProduct.stock),
+      };
 
-        await updateProduct(id, payload);
-        setProducts(
-            products.map((product) =>
-                product.id === id ? { ...product, ...updatedProduct } : product
-            )
-        );
-        setEditingProduct(null);
-        setUpdatedProduct({});
+      await updateProduct(id, payload);
+      setProducts(
+        products.map((product) =>
+          product.id === id ? { ...product, ...updatedProduct } : product
+        )
+      );
+      setEditingProduct(null);
+      setUpdatedProduct({});
     } catch (err) {
-        console.error("Error updating product:", err);
-        setError("Failed to update product.");
+      console.error("Error updating product:", err);
+      setError("Failed to update product.");
     }
-};
-
+  };
 
   const handleDeleteProduct = async (id) => {
     try {
@@ -113,6 +131,7 @@ const ProductManagement = () => {
       {error && <div className="error-message">{error}</div>}
 
       <div className="add-product">
+        <h3>Add New Product</h3>
         <input
           type="text"
           value={newProduct.name}
@@ -166,14 +185,16 @@ const ProductManagement = () => {
             </option>
           ))}
         </select>
-        <input
-          type="text"
-          value={newProduct.image_url}
-          onChange={(e) =>
-            setNewProduct({ ...newProduct, image_url: e.target.value })
-          }
-          placeholder="Image URL"
-        />
+
+        <input type="file" accept="image/*" onChange={handleImageUpload} />
+        {newProduct.image_url && (
+          <img
+            src={newProduct.image_url}
+            alt="Preview"
+            style={{ width: "100px", marginTop: "10px" }}
+          />
+        )}
+
         <button onClick={handleAddProduct}>Add Product</button>
       </div>
 

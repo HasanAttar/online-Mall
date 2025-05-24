@@ -45,6 +45,7 @@ app.use('/api/orders', orderRouter);
 app.use('/api/delivery', deliveryRouter);
 app.use('/api/cart', cartRouter);
 app.use('/api/payments', paymentRouter); // Updated plural naming for consistency
+app.use('/uploads', express.static('uploads'));
 
 // Health check or CORS test endpoint
 app.get('/api/health', (req, res) => {

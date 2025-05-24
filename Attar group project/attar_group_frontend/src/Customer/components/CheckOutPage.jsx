@@ -55,6 +55,16 @@ const CheckoutPage= () => {
     return total + (price * item.quantity);
   }, 0);
 };
+useEffect(() => {
+  if (orderId) {
+    navigate("/thank-you", {
+      state: {
+        orderId,
+        email: formData.email,
+      },
+    });
+  }
+}, [orderId, formData.email, navigate]);
 
   const handleSubmit = async (e) => {
   e.preventDefault();
@@ -65,7 +75,7 @@ const CheckoutPage= () => {
 
   try {
     const orderData = {
-      user_id: 3, // Replace this with dynamic user ID if login is implemented
+      user_id: null, // Replace this with dynamic user ID if login is implemented
       payment_method: formData.paymentMethod,
       delivery_address: formData.address,
       items: cart.map((item) => ({
@@ -78,9 +88,9 @@ const CheckoutPage= () => {
     console.log("Sending orderData:", orderData); // ✅ DEBUGGING
 
     const response = await axios.post("/api/orders", orderData);
-    setOrderId(response.data.order_id); // updated to match backend key
-    setOrderSuccess(true);
-    clearCart();
+ setOrderId(response.data.order_id);
+clearCart();
+
   } catch (err) {
     console.error("Order submission error:", err);
     setErrors({
