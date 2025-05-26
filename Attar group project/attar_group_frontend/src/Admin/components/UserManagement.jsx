@@ -13,21 +13,17 @@ const AdminUsers = () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) {
-          console.log("No token found, redirecting to login...");
           navigate("/admin/login");
           return;
         }
 
-        console.log("Fetching users...");
         const response = await fetchUsers();
-        const userData = response.data;
-        console.log("Users fetched successfully:", userData);
+        const userData = response.data || [];
         setUsers(userData);
       } catch (err) {
         console.error("Error fetching users:", err);
         setError("Failed to load users.");
         if (err.response?.status === 401) {
-          console.log("Unauthorized, redirecting to login...");
           navigate("/admin/login");
         }
       }
@@ -37,8 +33,10 @@ const AdminUsers = () => {
   }, [navigate]);
 
   const handleDeleteUser = async (id) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this user?");
+    if (!confirmDelete) return;
+
     try {
-      console.log("Deleting user with ID:", id);
       await deleteUser(id);
       setUsers(users.filter((user) => user.id !== id));
     } catch (err) {
@@ -55,7 +53,9 @@ const AdminUsers = () => {
           Back to Dashboard
         </button>
       </div>
+
       {error && <div className="error-message">{error}</div>}
+
       <div className="table-responsive">
         <table className="users-table">
           <thead>
@@ -68,7 +68,7 @@ const AdminUsers = () => {
             </tr>
           </thead>
           <tbody>
-            {Array.isArray(users) &&
+            {Array.isArray(users) && users.length > 0 ? (
               users.map((user) => (
                 <tr key={user.id}>
                   <td>{user.id}</td>
@@ -76,15 +76,19 @@ const AdminUsers = () => {
                   <td>{user.email}</td>
                   <td>{user.role}</td>
                   <td>
-                    <button
-                      className="btn-delete"
-                      onClick={() => handleDeleteUser(user.id)}
-                    >
+                    <button className="btn-delete" onClick={() => handleDeleteUser(user.id)}>
                       Delete
                     </button>
                   </td>
                 </tr>
-              ))}
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" style={{ textAlign: "center" }}>
+                  No users found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

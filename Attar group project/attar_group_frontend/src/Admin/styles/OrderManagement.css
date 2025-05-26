@@ -42,4 +42,14 @@
     color: red;
     margin-bottom: 10px;
   }
-  
+  .table-responsive {
+  overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+  .order-table th,
+  .order-table td {
+    font-size: 12px;
+    padding: 8px;
+  }
+}

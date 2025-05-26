@@ -17,15 +17,18 @@ const ProductPage = () => {
     const loadInitialData = async () => {
       try {
         setLoading(true);
-        const [productsResponse, categoriesResponse] = await Promise.all([
+        const [productsRes, categoriesRes] = await Promise.all([
           fetchProducts(),
           fetchCategories(),
         ]);
-        setProducts(productsResponse.data.products);
-        setCategories(categoriesResponse.data.categories);
+        setProducts(productsRes.data.products);
+        setCategories(categoriesRes.data.categories);
 
         const categoryId = searchParams.get("category");
+        const searchTerm = searchParams.get("search");
+
         if (categoryId) setSelectedCategory(categoryId);
+       
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load data. Please try again later.");
@@ -37,9 +40,19 @@ const ProductPage = () => {
     loadInitialData();
   }, [searchParams]);
 
-  const filteredProducts = selectedCategory
-    ? products.filter((product) => product.category_id === parseInt(selectedCategory))
-    : products;
+  const search = searchParams.get("search")?.toLowerCase() || "";
+
+  const filteredProducts = products.filter((product) => {
+    const matchesCategory = selectedCategory
+      ? product.category_id === parseInt(selectedCategory)
+      : true;
+
+    const matchesSearch = search
+      ? product.name.toLowerCase().includes(search)
+      : true;
+
+    return matchesCategory && matchesSearch;
+  });
 
   const handleProductClick = (productId) => {
     navigate(`/product/${productId}`);
@@ -62,14 +75,15 @@ const ProductPage = () => {
           onChange={(e) => setSelectedCategory(e.target.value)}
         >
           <option value="">All Categories</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
             </option>
           ))}
         </select>
         <span className="results-count">
-          Showing {filteredProducts.length} {filteredProducts.length === 1 ? "item" : "items"}
+          Showing {filteredProducts.length}{" "}
+          {filteredProducts.length === 1 ? "item" : "items"}
         </span>
       </div>
 
@@ -108,7 +122,9 @@ const ProductPage = () => {
                     <div className="product-badge">
                       {product.is_new && <span className="new-badge">New</span>}
                       {product.discount > 0 && (
-                        <span className="discount-badge">-{product.discount}%</span>
+                        <span className="discount-badge">
+                          -{product.discount}%
+                        </span>
                       )}
                     </div>
                   </div>
@@ -121,7 +137,11 @@ const ProductPage = () => {
                             ${Number(product.price).toFixed(2)}
                           </span>
                           <span className="discounted-price">
-                            ${(Number(product.price) * (1 - product.discount / 100)).toFixed(2)}
+                            $
+                            {(
+                              Number(product.price) *
+                              (1 - product.discount / 100)
+                            ).toFixed(2)}
                           </span>
                         </>
                       ) : (
@@ -132,12 +152,16 @@ const ProductPage = () => {
                       {[...Array(5)].map((_, i) => (
                         <span
                           key={i}
-                          className={`star ${i < Math.floor(product.rating || 0) ? "filled" : ""}`}
+                          className={`star ${
+                            i < Math.floor(product.rating || 0) ? "filled" : ""
+                          }`}
                         >
                           ★
                         </span>
                       ))}
-                      <span className="rating-count">({product.review_count || 0})</span>
+                      <span className="rating-count">
+                        ({product.review_count || 0})
+                      </span>
                     </div>
                   </div>
                 </motion.div>
@@ -149,8 +173,10 @@ const ProductPage = () => {
             <div className="empty-state">
               <img src="/empty-products.svg" alt="No products found" />
               <h3>No products found</h3>
-              <p>Try changing your filter or check back later.</p>
-              <button onClick={() => setSelectedCategory("")}>Reset Filters</button>
+              <p>Try changing the search or filter.</p>
+              <button onClick={() => navigate("/products")}>
+                Reset Search & Filters
+              </button>
             </div>
           )}
         </>

@@ -8,12 +8,16 @@ import {
 import "../styles/CategoriesManagement.css";
 import { useNavigate } from "react-router-dom";
 
+// Helper to resolve full image URL
+const getImageUrl = (path) => `${import.meta.env.VITE_API_URL}${path}`;
+
 const CategoriesManagement = () => {
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState("");
   const [newCategory, setNewCategory] = useState("");
+  const [newCategoryImage, setNewCategoryImage] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
-  const [updatedName, setUpdatedName] = useState("");
+  const [updatedFields, setUpdatedFields] = useState({ name: "", image_url: "" });
 
   const navigate = useNavigate();
 
@@ -27,55 +31,45 @@ const CategoriesManagement = () => {
         setError("Failed to load categories.");
       }
     };
-
     loadCategories();
   }, []);
 
   const handleAddCategory = async () => {
     const trimmed = newCategory.trim();
-    if (!trimmed) {
-      return setError("Category name cannot be empty.");
-    }
+    if (!trimmed) return setError("Category name is required.");
 
-    if (categories.some((cat) => cat.name.toLowerCase() === trimmed.toLowerCase())) {
-      return setError("Category already exists.");
+    const formData = new FormData();
+    formData.append("name", trimmed);
+    if (newCategoryImage) {
+      formData.append("image", newCategoryImage); // must match multer field name
     }
 
     try {
-      const response = await addCategory({ name: trimmed });
+      const response = await addCategory(formData); // should accept FormData
       setCategories([...categories, response.data]);
       setNewCategory("");
+      setNewCategoryImage(null);
       setError("");
     } catch (err) {
-      console.error("Error adding category:", err);
       setError("Failed to add category.");
     }
   };
 
   const handleEditCategory = async (id) => {
-    const trimmed = updatedName.trim();
-    if (!trimmed) {
-      return setError("Updated category name cannot be empty.");
-    }
-
-    if (
-      categories.some(
-        (cat) =>
-          cat.id !== id && cat.name.toLowerCase() === trimmed.toLowerCase()
-      )
-    ) {
-      return setError("Another category with the same name already exists.");
-    }
+    if (!updatedFields.name.trim()) return setError("Category name cannot be empty.");
 
     try {
-      await updateCategory(id, { name: trimmed });
+      await updateCategory(id, {
+        name: updatedFields.name.trim(),
+        image_url: updatedFields.image_url.trim(),
+      });
       setCategories(
-        categories.map((category) =>
-          category.id === id ? { ...category, name: trimmed } : category
+        categories.map((cat) =>
+          cat.id === id ? { ...cat, ...updatedFields } : cat
         )
       );
       setEditingCategory(null);
-      setUpdatedName("");
+      setUpdatedFields({ name: "", image_url: "" });
       setError("");
     } catch (err) {
       console.error("Error updating category:", err);
@@ -89,8 +83,7 @@ const CategoriesManagement = () => {
 
     try {
       await deleteCategory(id);
-      setCategories(categories.filter((category) => category.id !== id));
-      setError("");
+      setCategories(categories.filter((cat) => cat.id !== id));
     } catch (err) {
       console.error("Error deleting category:", err);
       setError("Failed to delete category.");
@@ -101,10 +94,7 @@ const CategoriesManagement = () => {
     <div className="categories-management-container">
       <div className="header">
         <h1>Manage Categories</h1>
-        <button
-          className="btn-back-to-dashboard"
-          onClick={() => navigate("/admin/dashboard")}
-        >
+        <button className="btn-back-to-dashboard" onClick={() => navigate("/admin/dashboard")}>
           Back to Dashboard
         </button>
       </div>
@@ -114,12 +104,17 @@ const CategoriesManagement = () => {
       <div className="add-category">
         <input
           type="text"
+          placeholder="New Category Name"
           value={newCategory}
           onChange={(e) => {
             setNewCategory(e.target.value);
             setError("");
           }}
-          placeholder="New category name"
+        />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setNewCategoryImage(e.target.files[0])}
         />
         <button className="btn-add-category" onClick={handleAddCategory}>
           Add Category
@@ -130,6 +125,7 @@ const CategoriesManagement = () => {
         <thead>
           <tr>
             <th>ID</th>
+            <th>Image</th>
             <th>Name</th>
             <th>Actions</th>
           </tr>
@@ -140,15 +136,40 @@ const CategoriesManagement = () => {
               <tr key={category.id}>
                 <td>{category.id}</td>
                 <td>
+                  <img
+                    src={
+                      category.image_url
+                        ? getImageUrl(category.image_url)
+                        : "/default-category.jpg"
+                    }
+                    alt={category.name}
+                    style={{
+                      width: "50px",
+                      height: "50px",
+                      objectFit: "cover",
+                      borderRadius: "4px",
+                    }}
+                  />
+                </td>
+                <td>
                   {editingCategory === category.id ? (
-                    <input
-                      type="text"
-                      value={updatedName}
-                      onChange={(e) => {
-                        setUpdatedName(e.target.value);
-                        setError("");
-                      }}
-                    />
+                    <>
+                      <input
+                        type="text"
+                        value={updatedFields.name}
+                        onChange={(e) =>
+                          setUpdatedFields({ ...updatedFields, name: e.target.value })
+                        }
+                      />
+                      <input
+                        type="text"
+                        placeholder="Image URL"
+                        value={updatedFields.image_url}
+                        onChange={(e) =>
+                          setUpdatedFields({ ...updatedFields, image_url: e.target.value })
+                        }
+                      />
+                    </>
                   ) : (
                     category.name
                   )}
@@ -166,7 +187,7 @@ const CategoriesManagement = () => {
                         className="btn-cancel"
                         onClick={() => {
                           setEditingCategory(null);
-                          setUpdatedName("");
+                          setUpdatedFields({ name: "", image_url: "" });
                         }}
                       >
                         Cancel
@@ -178,8 +199,10 @@ const CategoriesManagement = () => {
                         className="btn-edit"
                         onClick={() => {
                           setEditingCategory(category.id);
-                          setUpdatedName(category.name);
-                          setError("");
+                          setUpdatedFields({
+                            name: category.name,
+                            image_url: category.image_url || "",
+                          });
                         }}
                       >
                         Edit

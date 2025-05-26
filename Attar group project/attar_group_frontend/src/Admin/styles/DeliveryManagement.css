@@ -105,4 +105,6 @@
   .btn-edit:hover {
     background-color: #e0a800;
   }
-  
+  .table-responsive {
+  overflow-x: auto;
+}

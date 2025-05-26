@@ -9,8 +9,11 @@ export const updateShop = async (id, updatedData) => await axios.put(`/api/shops
 
 // Category Endpoints
 export const fetchCategories = async () => await axios.get("/api/categories");
-export const addCategory = async (categoryData) => await axios.post("/api/categories", categoryData);
-export const updateCategory = async (id, updatedData) => await axios.put(`/api/categories/${id}`, updatedData);
+export const addCategory = async (formData) =>
+  await axios.post("/api/categories", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  export const updateCategory = async (id, updatedData) => await axios.put(`/api/categories/${id}`, updatedData);
 export const deleteCategory = async (id) => await axios.delete(`/api/categories/${id}`);
 
 // Product Endpoints

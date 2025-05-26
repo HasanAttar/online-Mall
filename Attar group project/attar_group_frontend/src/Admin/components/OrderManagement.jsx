@@ -8,31 +8,37 @@ const OrderManagement = () => {
   const [error, setError] = useState("");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [newStatus, setNewStatus] = useState("");
+  const [loading, setLoading] = useState(true);
+
   const navigate = useNavigate();
 
   useEffect(() => {
     const loadOrders = async () => {
       try {
-        console.log("Fetching orders...");
         const response = await fetchOrders();
-        console.log("Orders fetched successfully:", response.data);
-        setOrders(response.data.orders);
+        setOrders(response.data.orders || []);
       } catch (err) {
         console.error("Error fetching orders:", err);
         setError(err.response?.data?.message || "Failed to load orders.");
+      } finally {
+        setLoading(false);
       }
     };
 
     loadOrders();
   }, []);
 
-
   const handleUpdateStatus = async (orderId) => {
+    if (!newStatus) {
+      setError("Please select a new status.");
+      return;
+    }
+
     try {
       await updateOrderStatus(orderId, { status: newStatus });
-      setOrders(
-        orders.map((order) =>
-          order.id === orderId ? {...order, status: newStatus} : order
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId ? { ...order, status: newStatus } : order
         )
       );
       setSelectedOrder(null);
@@ -51,64 +57,94 @@ const OrderManagement = () => {
           Back to Dashboard
         </button>
       </div>
+
       {error && <div className="error-message">{error}</div>}
-
-      <table className="order-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>User</th>
-            <th>Products</th>
-            <th>Total Price</th>
-            <th>Status</th>
-            <th>Payment Method</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Array.isArray(orders) &&
-            orders.map((order) => (
-              <tr key={order.id}>
-              <td>{order.id}</td>
-              <td>{order.user_id}</td>
-              <td>
-                {order.products.map((product) => (
-                  <div key={product.product_id}>{product.product_name} ({product.quantity})</div>
-                ))}
-              </td>
-              <td>${Number(order.total_price).toFixed(2)}</td>
-              <td>
-                {selectedOrder === order.id ? (
-                  <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
-                    <option value="pending">Pending</option>
-                    <option value="completed">Completed</option>
-                    <option value="canceled">Canceled</option>
-                  </select>
-                ) : (
-                  order.status
-                )}
-              </td>
-              <td>{order.payment_method}</td>
-              <td>
-                {selectedOrder === order.id ? (
-                  <button onClick={() => handleUpdateStatus(order.id)}>Save</button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setSelectedOrder(order.id);
-                      setNewStatus(order.status);
-                    }}
-                  >
-                    Edit
-                  </button>
-                )}
-              </td>
-            </tr>
-            
-            ))}
-        </tbody>
-
-      </table>
+      {loading ? (
+        <p>Loading orders...</p>
+      ) : (
+        <div className="table-responsive">
+          <table className="order-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Products</th>
+                <th>Total Price</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.isArray(orders) && orders.length > 0 ? (
+                orders.map((order) => (
+                  <tr key={order.id}>
+                    <td>{order.id}</td>
+                    <td>{order.user_id || "Guest"}</td>
+                    <td>
+                      {order.products.map((p) => (
+                        <div key={p.product_id}>
+                          {p.product_name} ({p.quantity})
+                        </div>
+                      ))}
+                    </td>
+                    <td>${Number(order.total_price).toFixed(2)}</td>
+                    <td>
+                      {selectedOrder === order.id ? (
+                        <select
+                          value={newStatus}
+                          onChange={(e) => setNewStatus(e.target.value)}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="completed">Completed</option>
+                          <option value="canceled">Canceled</option>
+                        </select>
+                      ) : (
+                        order.status
+                      )}
+                    </td>
+                    <td>{order.payment_method}</td>
+                    <td>
+                      {selectedOrder === order.id ? (
+                        <>
+                          <button
+                            className="btn-save"
+                            onClick={() => handleUpdateStatus(order.id)}
+                          >
+                            Save
+                          </button>
+                          <button
+                            className="btn-cancel"
+                            onClick={() => setSelectedOrder(null)}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          className="btn-edit"
+                          onClick={() => {
+                            setSelectedOrder(order.id);
+                            setNewStatus(order.status);
+                          }}
+                        >
+                          Edit
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: "center" }}>
+                    No orders found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
