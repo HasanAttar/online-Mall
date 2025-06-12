@@ -53,12 +53,12 @@
   flex: 2;
 }
 
-.product-image {
+/* .product-image {
   width: 80px;
   height: 80px;
   object-fit: cover;
   border-radius: 4px;
-}
+} */
 
 .product-details h3 {
   margin: 0;

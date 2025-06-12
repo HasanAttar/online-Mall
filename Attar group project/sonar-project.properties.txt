@@ -1,0 +1,10 @@
+sonar.projectKey=online_mall
+sonar.projectName=Online Mall Website
+sonar.projectVersion=1.0
+
+sonar.sources=frontend,backend
+sonar.exclusions=**/node_modules/**,**/*.test.js,**/*.spec.js
+
+sonar.host.url=http://localhost:9000
+sonar.login=sqp_3f3cd4b35b7440484fd95fec736d52e0aadb4a0d
+sonar.sourceEncoding=UTF-8
